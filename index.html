@@ -1,0 +1,821 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  Vote, 
+  CheckCircle, 
+  Mail, 
+  ShieldAlert, 
+  BarChart3, 
+  MapPin, 
+  Building2, 
+  Users, 
+  Code, 
+  Server, 
+  Globe, 
+  RefreshCw, 
+  PieChart as PieIcon, 
+  Info,
+  CheckCircle2,
+  Lock,
+  ArrowRight,
+  ExternalLink,
+  Sparkles
+} from 'lucide-react';
+
+// --- FULL 77 DISTRICTS AND REAL MUNICIPALITIES/GAUPALIKAS OF NEPAL ---
+const PROVINCES = [
+  { id: 'p1', name: 'कोशी प्रदेश (Province 1)' },
+  { id: 'p2', name: 'मधेश प्रदेश (Madhesh Province)' },
+  { id: 'p3', name: 'बागमती प्रदेश (Bagmati Province)' },
+  { id: 'p4', name: 'गण्डकी प्रदेश (Gandaki Province)' },
+  { id: 'p5', name: 'लुम्बिनी प्रदेश (Lumbini Province)' },
+  { id: 'p6', name: 'कर्णाली प्रदेश (Karnali Province)' },
+  { id: 'p7', name: 'सुदूरपश्चिम प्रदेश (Sudurpashchim Province)' }
+];
+
+const DISTRICTS_BY_PROVINCE = {
+  p1: ['ताप्लेजुङ', 'पाँचथर', 'इलाम', 'झापा', 'मोरङ', 'सुनसरी', 'धनकुटा', 'तेह्रथुम', 'संखुवासभा', 'भोजपुर', 'सोलुखुम्बु', 'ओखलढुङ्गा', 'खोटाङ', 'उदयपुर'],
+  p2: ['सप्तरी', 'सिराहा', 'धनुषा', 'महोत्तरी', 'सर्लाही', 'रौतहट', 'बारा', 'पर्सा'],
+  p3: ['काठमाडौँ', 'ललितपुर', 'भक्तपुर', 'कभ्रेपलाञ्चोक', 'चितवन', 'धादिङ', 'नुवाकोट', 'सिन्धुपाल्चोक', 'मकवानपुर', 'दोलखा', 'सिन्धुली', 'रसुवा', 'रामेछाप'],
+  p4: ['लमजुङ', 'कास्की', 'तनहुँ', 'स्याङ्जा', 'गोरखा', 'नवलपुर (बर्दघाट सुस्ता पूर्व)', 'बागलुङ', 'पर्वत', 'म्याग्दी', 'मुस्ताङ', 'मनाङ'],
+  p5: ['रुपन्देही', 'दाङ', 'बाँके', 'कपिलवस्तु', 'पाल्पा', 'नवलपरासी (बर्दघाट सुस्ता पश्चिम)', 'बर्दिया', 'अर्घाखाँची', 'गुल्मी', 'रोल्पा', 'प्युठान', 'रुकुम पूर्व'],
+  p6: ['सुर्खेत', 'दैलेख', 'जुम्ला', 'कालीकोट', 'सल्यान', 'रुकुम पश्चिम', 'जाजरकोट', 'हुम्ला', 'मुगु', 'डोल्पा'],
+  p7: ['कैलाली', 'कञ्चनपुर', 'डडेलधुरा', 'डोटी', 'बैतडी', 'अछाम', 'बझाङ', 'दार्चुला', 'बाजुरा']
+};
+
+// Complete Authentic Real Municipalities and Gaunpalikas for ALL 77 Districts
+const REAL_LOCAL_LEVELS = {
+  // === कोशी प्रदेश (KOSHI PROVINCE - 14 Districts) ===
+  'ताप्लेजुङ': ['फुङलिङ नगरपालिका', 'सिरिजङ्घा गाउँपालिका', 'आठराई त्रिवेणी गाउँपालिका', 'पाथीभरा याङवरक गाउँपालिका', 'मेरिङदेन गाउँपालिका', 'मैवाखोला गाउँपालिका', 'फक्ताङलुङ गाउँपालिका', 'सिदिङ्वा गाउँपालिका', 'माइवाखोला गाउँपालिका'],
+  'पाँचथर': ['फिदिम नगरपालिका', 'फालेलुङ गाउँपालिका', 'फाल्गुनन्द गाउँपालिका', 'हिल्लिहाङ गाउँपालिका', 'कुम्मायक गाउँपालिका', 'मिक्लाजुङ गाउँपालिका', 'तुम्बेवा गाउँपालिका', 'याङवरक गाउँपालिका'],
+  'इलाम': ['इलाम नगरपालिका', 'सूर्योदय नगरपालिका', 'माई नगरपालिका', 'देउमाई नगरपालिका', 'रोङ गाउँपालिका', 'माङ्सेबुङ गाउँपालिका', 'चुलाचुली गाउँपालिका', 'सन्दकपुर गाउँपालिका', 'फाकफोकथुम गाउँपालिका', 'माईजोगमाई गाउँपालिका'],
+  'झापा': ['बिर्तामोड नगरपालिका', 'दमक नगरपालिका', 'भद्रपुर नगरपालिका', 'मेचीनगर नगरपालिका', 'अर्जुनधारा नगरपालिका', 'शिवसताक्षी नगरपालिका', 'कङ्काई नगरपालिका', 'गौराहद नगरपालिका', 'कमल गाउँपालिका', 'बुद्धशान्ति गाउँपालिका', 'कचनकवल गाउँपालिका', 'झापा गाउँपालिका', 'बाह्रदशी गाउँपालिका', 'गौरीगञ्ज गाउँपालिका', 'हल्दीबारी गाउँपालिका'],
+  'मोरङ': ['विराटनगर महानगरपालिका', 'सुन्दरहरैँचा नगरपालिका', 'बेलबारी नगरपालिका', 'पथरी शनिश्चरे नगरपालिका', 'उर्लाबारी नगरपालिका', 'लेटाङ नगरपालिका', 'रङ्गेली नगरपालिका', 'रतुवामाई नगरपालिका', 'सुनबर्षी नगरपालिका', 'कानेपोखरी गाउँपालिका', 'ग्रामथान गाउँपालिका', 'कटहरी गाउँपालिका', 'धनपालथान गाउँपालिका', 'मिक्लाजुङ गाउँपालिका', 'केराबारी गाउँपालिका', 'जहदा गाउँपालिका'],
+  'सुनसरी': ['इटहरी उपमहानगरपालिका', 'धरान उपमहानगरपालिका', 'इनरुवा नगरपालिका', 'दुहवी नगरपालिका', 'रामधुनी नगरपालिका', 'बराहक्षेत्र नगरपालिका', 'देवताल गाउँपालिका', 'कोशी गाउँपालिका', 'गढी गाउँपालिका', 'बर्जु गाउँपालिका', 'भोक्राहा नरसिंह गाउँपालिका', 'हरिनगर गाउँपालिका'],
+  'धनकुटा': ['धनकुटा नगरपालिका', 'पाखribास नगरपालिका', 'महालक्ष्मी नगरपालिका', 'साँगुरीगढी गाउँपालिका', 'खाल्सा छतार गाउँपालिका', 'छथर जोरपाटी गाउँपालिका', 'चौबीसे गाउँपालिका'],
+  'तेह्रथुम': ['म्याङलुङ नगरपालिका', 'लालीगुराँस नगरपालिका', 'आठराई गाउँपालिका', 'छथर गाउँपालिका', 'फेदाप गाउँपालिका', 'मेन्छयायेम गाउँपालिका'],
+  'संखुवासभा': ['खाँदबारी नगरपालिका', 'चैनपुर नगरपालिका', 'धर्मदेवी नगरपालिका', 'मादी नगरपालिका', 'पाँचखपन नगरपालिका', 'भोटखोला गाउँपालिका', 'मकालु गाउँपालिका', 'सभापोखरी गाउँपालिका', 'सिलीचोङ गाउँपालिका', 'चिचिला गाउँपालिका'],
+  'भोजपुर': ['भोजपुर नगरपालिका', 'षडानन्द नगरपालिका', 'हटुवागढी गाउँपालिका', 'रामप्रसादराई गाउँपालिका', 'आमचोक गाउँपालिका', 'ट्याम्केमैयुङ गाउँपालिका', 'अरुण गाउँपालिका', 'पौवादुङ्मा गाउँपालिका', 'साल्पासिलोछो गाउँपालिका'],
+  'सोलुखुम्बु': ['सोलुदुधकुण्ड नगरपालिका', 'खुम्बु पासाङल्हामु गाउँपालिका', 'माप्य दुधकोशी गाउँपालिका', 'नेचासल्यान गाउँपालिका', 'महाकुलुङ गाउँपालिका', 'सोताङ गाउँपालिका', 'लिखुपिके गाउँपालिका', 'थुलुङ दुधकोशी गाउँपालिका'],
+  'ओखलढुङ्गा': ['सिद्धिचरण नगरपालिका', 'खिजायदेम्बा गाउँपालिका', 'चम्पादेवी गाउँपालिका', 'चिशङ्खुगढी गाउँपालिका', 'मानेभञ्ज्याङ गाउँपालिका', 'मोलुङ गाउँपालिका', 'लिखु गाउँपालिका', 'सुनकोशी गाउँपालिका'],
+  'खोटाङ': ['दिक्तेल रुपाकोट मझुवागढी नगरपालिका', 'हलेसी तुवाचुङ नगरपालिका', 'ऐसेलुखर्क गाउँपालिका', 'रावा बेसी गाउँपालिका', 'केपिलासगढी गाउँपालिका', 'खोटेहाङ गाउँपालिका', 'जन्तेढुङ्गा गाउँपालिका', 'साकेला गाउँपालिका', 'दिप्रुङ चुइचुम्मा गाउँपालिका', 'बराहपोखरी गाउँपालिका'],
+  'उदयपुर': ['त्रियुगा नगरपालिका', 'कटारी नगरपालिका', 'चौदण्डीगढी नगरपालिका', 'बेलका नगरपालिका', 'उदयपुरगढी गाउँपालिका', 'ताप्ली गाउँपालिका', 'रौतामाई गाउँपालिका', 'सुनकोशी गाउँपालिका'],
+
+  // === मधेश प्रदेश (MADHESH PROVINCE - 8 Districts) ===
+  'सप्तरी': ['राजविराज नगरपालिका', 'कञ्चनरूप नगरपालिका', 'डाकनेश्वरी नगरपालिका', 'बोदेबर्साइन नगरपालिका', 'शम्भुनाथ नगरपालिका', 'हनुमाननगर कङ्कालिनी नगरपालिका', 'खडक नगरपालिका', 'सप्तकोशी नगरपालिका', 'अग्निसाइर कृष्णासवरन गाउँपालिका', 'छिन्नमस्ता गाउँपालिका', 'महादेवा गाउँपालिका', 'तिलोठी गाउँपालिका', 'रुपनी गाउँपालिका', 'विष्णुपुर गाउँपालिका', 'बलान-बिहुल गाउँपालिका'],
+  'सिराहा': ['सिराहा नगरपालिका', 'लाहान नगरपालिका', 'गोलबजार नगरपालिका', 'मिर्चैया नगरपालिका', 'कल्याणपुर नगरपालिका', 'सुखीपुर नगरपालिका', 'धनगढीमाई नगरपालिका', 'नरहा गाउँपालिका', 'बद्रिनाथ गाउँपालिका', 'विष्णुपुर गाउँपालिका', 'अर्नमा गाउँपालिका', 'अौरही गाउँपालिका', 'सखुवानान्कारकट्टी गाउँपालिका', 'नवराजपुर गाउँपालिका', 'लक्ष्मीपुर पतारी गाउँपालिका'],
+  'धनुषा': ['जनकपुरधाम उपमहानगरपालिका', 'धनुषाधाम नगरपालिका', 'छिरेश्वरनाथ नगरपालिका', 'गणेशमान चारनाथ नगरपालिका', 'नगराइन नगरपालिका', 'विदेह नगरपालिका', 'मिथिला नगरपालिका', 'सबैला नगरपालिका', 'कमला नगरपालिका', 'हंसपुर नगरपालिका', 'मिथिला विहारी नगरपालिका', 'औरही गाउँपालिका', 'जनकनन्दिनी गाउँपालिका', 'बटेश्वर गाउँपालिका', 'मुुखियापट्टी मुसहरमिया गाउँपालिका', 'धनौजी गाउँपालिका'],
+  'महोत्तरी': ['जलेश्वर नगरपालिका', 'बर्दिबास नगरपालिका', 'गौशाला नगरपालिका', 'रामगोपालपुर नगरपालिका', 'मनरा शिसवा नगरपालिका', 'भङ्गहा नगरपालिका', 'बलवा नगरपालिका', 'लोहारपट्टी नगरपालिका', 'मटिहानी नगरपालिका', 'औरही नगरपालिका', 'एकडारा गाउँपालिका', 'सोनमा गाउँपालिका', 'साम्सी गाउँपालिका', 'महत्तरी गाउँपालिका', 'पिपरा गाउँपालिका'],
+  'सर्लाही': ['मलङ्गवा नगरपालिका', 'हरिपुर नगरपालिका', 'लालबन्दी नगरपालिका', 'ईश्वरपुर नगरपालिका', 'बरहथवा नगरपालिका', 'हरिपूर्वा नगरपालिका', 'हरिवन नगरपालिका', 'बागमती नगरपालिका', 'कविलासी नगरपालिका', 'बलरा नगरपालिका', 'चक्रघट्टा गाउँपालिका', 'चन्द्रनगर गाउँपालिका', 'धनकौल गाउँपालिका', 'ब्रह्मपुरी गाउँपालिका', 'रामनगर गाउँपालिका', 'विष्णु गाउँपालिका', 'कौडेना गाउँपालिका', 'पर्सा गाउँपालिका', 'बसबरिया गाउँपालिका'],
+  'रौतहट': ['गौर नगरपालिका', 'चन्द्रपुर नगरपालिका', 'गरुडा नगरपालिका', 'मौलापुर नगरपालिका', 'माधवनारायण नगरपालिका', 'ईशानाथ नगरपालिका', 'परोह नगरपालिका', 'राजपुर नगरपालिका', 'देवाही गोनाही नगरपालिका', 'वृन्दावन नगरपालिका', 'कटहरिया नगरपालिका', 'गडिमाई नगरपालिका', 'गुजरा नगरपालिका', 'फतुवा विजयपुर नगरपालिका', 'बौधीमाई नगरपालिका', 'राजदेवी नगरपालिका', 'दुर्गाभगवती गाउँपालिका', 'यमुनामाई गाउँपालिका'],
+  'बारा': ['कलैया उपमहानगरपालिका', 'जीतपुरसिमरा उपमहानगरपालिका', 'कोल्हवी नगरपालिका', 'निजगढ नगरपालिका', 'महागढीमाई नगरपालिका', 'सिमरौनगढ नगरपालिका', 'पचरौता नगरपालिका', 'देवताल गाउँपालिका', 'सुवर्ण गाउँपालिका', 'प्रसौनी गाउँपालिका', 'विश्रामपुर गाउँपालिका', 'बारागढी गाउँपालिका', 'करैयामाई गाउँपालिका', 'परवानीपुर गाउँपालिका', 'फेटा गाउँपालिका'],
+  'पर्सा': ['वीरगञ्ज महानगरपालिका', 'पोखरीया नगरपालिका', 'पर्सागढी नगरपालिका', 'बहूदरमाई नगरपालिका', 'ठोरी गाउँपालिका', 'जजगन्नाथपुर गाउँपालिका', 'धोबीनी गाउँपालिका', 'छिपहरमाई गाउँपालिका', 'पकाहा मैनापुर गाउँपालिका', 'बिन्दवासिनी गाउँपालिका', 'सकहुवा प्रसौनी गाउँपालिका', 'पटेर्वा सुगौली गाउँपालिका', 'कालिकामाई गाउँपालिका', 'जिरा भवानी गाउँपालिका'],
+
+  // === बागमती प्रदेश (BAGMATI PROVINCE - 13 Districts) ===
+  'काठमाडौँ': ['काठमाडौँ महानगरपालिका', 'कीर्तिपुर नगरपालिका', 'बूढानिलकण्ठ नगरपालिका', 'टोखा नगरपालिका', 'गोकर्णेश्वर नगरपालिका', 'नागार्जुन नगरपालिका', 'चन्द्रागिरि नगरपालिका', 'तारकेश्वर नगरपालिका', 'कागेश्वरी मनोहरा नगरपालिका', 'शङ्खरापुर नगरपालिका', 'दक्षिणकाली नगरपालिका'],
+  'ललितपुर': ['ललितपुर महानगरपालिका', 'महालक्ष्मी नगरपालिका', 'गोदावरी नगरपालिका', 'बागमती गाउँपालिका', 'कोन्योसोम गाउँपालिका', 'महाङ्काल गाउँपालिका'],
+  'भक्तपुर': ['भक्तपुर नगरपालिका', 'मध्यपुर थिमी नगरपालिका', 'सूर्यविनायक नगरपालिका', 'चाँगुनारायण नगरपालिका'],
+  'चितवन': ['भरतपुर महानगरपालिका', 'रत्ननगर नगरपालिका', 'खैरहनी नगरपालिका', 'माडी नगरपालिका', 'राप्ती नगरपालिका', 'कालिका नगरपालिका', 'इच्छाकामना गाउँपालिका'],
+  'कभ्रेपलाञ्चोक': ['धुलिखेल नगरपालिका', 'बनेपा नगरपालिका', 'पनौती नगरपालिका', 'पाँचखाल नगरपालिका', 'नमोबुद्ध नगरपालिका', 'मण्डनदेउपुर नगरपालिका', 'रोशी गाउँपालिका', 'तेमाल गाउँपालिका', 'चौँरीदेउराली गाउँपालिका', 'भुम्लु गाउँपालिका', 'खानीखोला गाउँपालिका', 'बेथानचोक गाउँपालिका', 'महाभारत गाउँपालिका'],
+  'धादिङ': ['नीलकण्ठ नगरपालिका', 'धुनीबेँसी नगरपालिका', 'गल्छी गाउँपालिका', 'गजूरी गाउँपालिका', 'थाक्रे गाउँपालिका', 'सिद्धलेक गाउँपालिका', 'खन्याबास गाउँपालिका', 'गंगाजमुना गाउँपालिका', 'नेत्रावती डबजोङ गाउँपालिका', 'त्रिपुरासुन्दरी गाउँपालिका', 'ज्वालामुखी गाउँपालिका', 'बेंशीसहर गाउँपालिका', 'रुबीभ्याली गाउँपालिका'],
+  'नुवाकोट': ['विदुर नगरपालिका', 'बेलकोटगढी नगरपालिका', 'ककनी गाउँपालिका', 'सूर्यगढी गाउँपालिका', 'तादी गाउँपालिका', 'तादी गाउँपालिका', 'लिखु गाउँपालिका', 'मादी गाउँपालिका', 'शिवपुरी गाउँपालिका', 'दुप्चेश्वर गाउँपालिका', 'तारकेश्वर गाउँपालिका', 'किस्पाङ गाउँपालिका', 'पञ्चकन्या गाउँपालिका'],
+  'सिन्धुपाल्चोक': ['चौतारा साँगाचोकगढी नगरपालिका', 'मेलम्ची नगरपालिका', 'बाह्रबीसे नगरपालिका', 'इन्द्रावती गाउँपालिका', 'हेलम्बु गाउँपालिका', 'भोटेकोशी गाउँपालिका', 'पाँचपोखरी थाङपाल गाउँपालिका', 'बलेफी गाउँपालिका', 'लिसङ्खु पाखर गाउँपालिका', 'सुनकोशी गाउँपालिका', 'त्रिपुरासुन्दरी गाउँपालिका', 'जुगल गाउँपालिका'],
+  'मकवानपुर': ['हेटौँडा उपमहानगरपालिका', 'थाहा नगरपालिका', 'भीमफेदी गाउँपालिका', 'मकवानपुरगढी गाउँपालिका', 'मनहरी गाउँपालिका', 'राक्सिराङ गाउँपालिका', 'बागमती गाउँपालिका', 'बकाैया गाउँपालिका', 'इन्द्रसरोवर गाउँपालिका', 'कैलाश गाउँपालिका'],
+  'दोलखा': ['भीमेश्वर नगरपालिका', 'जिरी नगरपालिका', 'कालिञ्चोक गाउँपालिका', 'गौरीशङ्कर गाउँपालिका', 'वैतेश्वर गाउँपालिका', 'शैलुङ गाउँपालिका', 'मेलुङ गाउँपालिका', 'बिगु गाउँपालिका', 'तामाकोशी गाउँपालिका'],
+  'सिन्धुली': ['कमलामाई नगरपालिका', 'दुधौली नगरपालिका', 'सुनकोशी गाउँपालिका', 'गोलञ्जोर गाउँपालिका', 'तीनपाटन गाउँपालिका', 'फिस्कल गाउँपालिका', 'मरीण गाउँपालिका', 'हरिहरपुरगढी गाउँपालिका', 'घ्याङलेख गाउँपालिका'],
+  'रसुवा': ['गोसाइँकुण्ड गाउँपालिका', 'कालिका गाउँपालिका', 'उत्तरगया गाउँपालिका', 'नौकुण्ड गाउँपालिका', 'आमाछोदिङ्मो गाउँपालिका'],
+  'रामेछाप': ['मन्थली नगरपालिका', 'रामेछाप नगरपालिका', 'उमाकुण्ड गाउँपालिका', 'खाँडादेवी गाउँपालिका', 'गोकुलगंगा गाउँपालिका', 'दोरम्बा गाउँपालिका', 'लिखु तामाकोशी गाउँपालिका', 'सुनापति गाउँपालिका'],
+
+  // === गण्डकी प्रदेश (GANDAKI PROVINCE - 11 Districts) ===
+  'लमजुङ': ['बेसीशहर नगरपालिका', 'सुन्दरबजार नगरपालिका', 'राइनस नगरपालिका', 'मध्यनेपाल नगरपालिका', 'मर्स्याङ्दी गाउँपालिका', 'दोर्दी गाउँपालिका', 'क्व्होलासोथार गाउँपालिका', 'दूधपोखरी गाउँपालिका'],
+  'कास्की': ['पोखरा महानगरपालिका', 'अन्नपूर्ण गाउँपालिका', 'माछापुच्छ्रे गाउँपालिका', 'रूपा गाउँपालिका', 'मादी गाउँपालिका'],
+  'तनहुँ': ['व्यास नगरपालिका', 'शुक्लागण्डकी नगरपालिका', 'भानु नगरपालिका', 'भिमाद नगरपालिका', 'म्याग्दे गाउँपालिका', 'आँबुखैरेनी गाउँपालिका', 'बन्दीपुर गाउँपालिका', 'ऋषिङ्ग गाउँपालिका', 'घिरिङ गाउँपालिका', 'देवघाट गाउँपालिका'],
+  'गोरखा': ['गोरखा नगरपालिका', 'पालुङटार नगरपालिका', 'शहीद लखन गाउँपालिका', 'सिरानचोक गाउँपालिका', 'भीमसेनथापा गाउँपालिका', 'आरूघाट गाउँपालिका', 'गण्डकी गाउँपालिका', 'अजिरकोट गाउँपालिका', 'धार्चे गाउँपालिका', 'चुमनुव्री गाउँपालिका', 'बारपाक सुलिकोट गाउँपालिका'],
+  'स्याङ्जा': ['पुतलीबजार नगरपालिका', 'वालिङ नगरपालिका', 'गल्याङ नगरपालिका', 'चापाकोट नगरपालिका', 'भीर्कोट नगरपालिका', 'आँधीखोला गाउँपालिका', 'अर्जुनचौपारी गाउँपालिका', 'फेदीखोला गाउँपालिका', 'बिरुवा गाउँपालिका', 'हरिनाश गाउँपालिका', 'कालीगण्डकी गाउँपालिका'],
+  'नवलपुर (बर्दघाट सुस्ता पूर्व)': ['कावासोती नगरपालिका', 'देवचुली नगरपालिका', 'गैँडाकोट नगरपालिका', 'मध्यविन्दु नगरपालिका', 'बौदीकाली गाउँपालिका', 'बुलिङटार गाउँपालिका', 'हुप्सेकोट गाउँपालिका', 'विनयी त्रिवेणी गाउँपालिका'],
+  'बागलुङ': ['बागलुङ नगरपालिका', 'ढोरपाटन नगरपालिका', 'जैमिनी नगरपालिका', 'गलकोट नगरपालिका', 'काठेखोला गाउँपालिका', 'ताराखोला गाउँपालिका', 'बडिगाड गाउँपालिका', 'निसीखोला गाउँपालिका', 'तमानखोला गाउँपालिका', 'बरेङ गाउँपालिका'],
+  'पर्वत': ['कुश्मा नगरपालिका', 'फलेवास नगरपालिका', 'जलजला गाउँपालिका', 'पैयूँ गाउँपालिका', 'महाशिला गाउँपालिका', 'मोदी गाउँपालिका', 'विहादी गाउँपालिका'],
+  'म्याग्दी': ['बेनी नगरपालिका', 'अन्नपूर्ण गाउँपालिका', 'धवलागिरी गाउँपालिका', 'मङ्गलसेन गाउँपालिका', 'मालिका गाउँपालिका', 'रघुगङ्गा गाउँपालिका'],
+  'मुस्ताङ': ['घरपझोङ गाउँपालिका', 'थासाङ गाउँपालिका', 'लो-घेकर दामोदरकुण्ड गाउँपालिका', 'लोमान्थाङ गाउँपालिका', 'वारागुङ मुक्तिक्षेत्र गाउँपालिका'],
+  'मनाङ': ['चामे गाउँपालिका', 'नारपा भूमि गाउँपालिका', 'मनाङ ङिस्याङ गाउँपालिका', 'नासोँ गाउँपालिका'],
+
+  // === लुम्बिनी प्रदेश (LUMBINI PROVINCE - 12 Districts) ===
+  'रुपन्देही': ['बुटवल उपमहानगरपालिका', 'सिद्धार्थनगर नगरपालिका', 'तिलोत्तमा नगरपालिका', 'सैनामैना नगरपालिका', 'लुम्बिनी सांस्कृतिक नगरपालिका', 'देवदह नगरपालिका', 'ओमसतिया गाउँपालिका', 'रोहिणी गाउँपालिका', 'सियारी गाउँपालिका', 'शुद्धोधन गाउँपालिका', 'कञ्चन गाउँपालिका', 'गाँधवा गाउँपालिका', 'कोटहीमाई गाउँपालिका', 'मर्चवारी गाउँपालिका', 'समरीमाई गाउँपालिका'],
+  'दाङ': ['घोराही उपमहानगरपालिका', 'तुलसीपुर उपमहानगरपालिका', 'लमही नगरपालिका', 'गढवा गाउँपालिका', 'राप्ती गाउँपालिका', 'शान्तिनगर गाउँपालिका', 'बङ्गलाचुली गाउँपालिका', 'दङ्गीशरण गाउँपालिका', 'राजपुर गाउँपालिका', 'बबई गाउँपालिका'],
+  'बाँके': ['नेपालगञ्ज उपमहानगरपालिका', 'कोहल्पुर नगरपालिका', 'राप्ती सोनारी गाउँपालिका', 'बैजनाथ गाउँपालिका', 'खजुरा गाउँपालिका', 'जानकी गाउँपालिका', 'डुडुवा गाउँपालिका', 'नरैनापुर गाउँपालिका'],
+  'कपिलवस्तु': ['कपिलवस्तु नगरपालिका', 'बाणगंगा नगरपालिका', 'शिवराज नगरपालिका', 'बुद्धभूमि नगरपालिका', 'कृष्णनगर नगरपालिका', 'महाराजगञ्ज नगरपालिका', 'मायादेवी गाउँपालिका', 'शुद्धोधन गाउँपालिका', 'यशोधरा गाउँपालिका', 'विजयनगर गाउँपालिका'],
+  'पाल्पा': ['तानसेन नगरपालिका', 'रामपुर नगरपालिका', 'निसीखोला गाउँपालिका', 'माथागढी गाउँपालिका', 'तिनाउ गाउँपालिका', 'बगनासकाली गाउँपालिका', 'रम्भा गाउँपालिका', 'पूर्वखोला गाउँपालिका', 'रिब्दीकोट गाउँपालिका', 'रैनादेवी छहरा गाउँपालिका'],
+  'नवलपरासी (बर्दघाट सुस्ता पश्चिम)': ['रामग्राम नगरपालिका', 'सुनवल नगरपालिका', 'बर्दघाट नगरपालिका', 'सरावल गाउँपालिका', 'हर्कपुर गाउँपालिका', 'पाल्हीनन्दन गाउँपालिका', 'प्रतापपुर गाउँपालिका'],
+  'बर्दिया': ['गुलरिया नगरपालिका', 'बाँसगढी नगरपालिका', 'राजापुर नगरपालिका', 'ठाकुरबाबा नगरपालिका', 'मधुवन नगरपालिका', 'बारबर्दिया नगरपालिका', 'गेरूवा गाउँपालिका', 'बढैयाताल गाउँपालिका'],
+  'अर्घाखाँची': ['सन्धिखर्क नगरपालिका', 'शीतगंगा नगरपालिका', 'भूमिकास्थान नगरपालिका', 'छत्रदेव गाउँपालिका', 'पाणिनी गाउँपालिका', 'मालारानी गाउँपालिका'],
+  'गुल्मी': ['रेसुङ्गा नगरपालिका', 'मुसिकोट नगरपालिका', 'छत्रकोट गाउँपालिका', 'गुल्मीदरबार गाउँपालिका', 'सत्यवती गाउँपालिका', 'चन्द्रकोट गाउँपालिका', 'कालीगण्डकी गाउँपालिका', 'इस्मारानी गाउँपालिका', 'धुरकोट गाउँपालिका', 'मदाने गाउँपालिका', 'मालिका गाउँपालिका'],
+  'रोल्पा': ['रोल्पा नगरपालिका', 'त्रिवेणी गाउँपालिका', 'परिवर्तन गाउँपालिका', 'माडी गाउँपालिका', 'रून्टीगढी गाउँपालिका', 'लुङग्री गाउँपालिका', 'सुवर्णावती गाउँपालिका', 'सुनछहरी गाउँपालिका', 'थवाङ गाउँपालिका', 'गंगादेव गाउँपालिका'],
+  'प्युठान': ['प्युठान नगरपालिका', 'स्वर्गद्वारी नगरपालिका', 'गौमुखी गाउँपालिका', 'माण्डवी गाउँपालिका', 'सरुमारानी गाउँपालिका', 'मल्लरानी गाउँपालिका', 'नौबहिनी गाउँपालिका', 'झिमरुक गाउँपालिका', 'ऐरावती गाउँपालिका'],
+  'रुकुम पूर्व': ['पुथा उत्तरगङ्गा गाउँपालिका', 'भूमे गाउँपालिका', 'सिस्ने गाउँपालिका'],
+
+  // === कर्णाली प्रदेश (KARNALI PROVINCE - 10 Districts) ===
+  'सुर्खेत': ['वीरेन्द्रनगर नगरपालिका', 'भेरीगंगा नगरपालिका', 'गुर्भाकोट नगरपालिका', 'पञ्चपुरी नगरपालिका', 'चौकुने गाउँपालिका', 'बराहताल गाउँपालिका', 'चिङ्गाड गाउँपालिका', 'सिम्ता गाउँपालिका', 'लेकबेँसी नगरपालिका'],
+  'दैलेख': ['नारायण नगरपालिका', 'दुल्लु नगरपालिका', 'चामुण्डा बिन्द्रासैनी नगरपालिका', 'आठबीस नगरपालिका', 'भगवतीमाई गाउँपालिका', 'गुराँस गाउँपालिका', 'डुङ्गेश्वर गाउँपालिका', 'नौमुले गाउँपालिका', 'महाबु गाउँपालिका', 'भैरवी गाउँपालिका', 'ठाटीकाँध गाउँपालिका'],
+  'जुम्ला': ['चन्दननाथ नगरपालिका', 'कनकासुन्दरी गाउँपालिका', 'सिञ्जा गाउँपालिका', 'हिमा गाउँपालिका', 'तिला गाउँपालिका', 'गुठिचौर गाउँपालिका', 'तातोपानी गाउँपालिका', 'पातरासी गाउँपालिका'],
+  'कालीकोट': ['खाँडाचक्र नगरपालिका', 'रास्कोट नगरपालिका', 'तिलागुफा नगरपालिका', 'पचालझरना गाउँपालिका', 'सान्निगाड गाउँपालिका', 'नरहरिनाथ गाउँपालिका', 'शुभकालिका गाउँपालिका', 'महावै गाउँपालिका', 'पलाता गाउँपालिका'],
+  'सल्यान': ['शारदा नगरपालिका', 'बागचौर नगरपालिका', 'बनगाड कुपिण्डे नगरपालिका', 'कालिमाटी गाउँपालिका', 'त्रिवेणी गाउँपालिका', 'कपुरकोट गाउँपालिका', 'छत्रेश्वरी गाउँपालिका', 'सिद्धकुमाख गाउँपालिका', 'कुमाख गाउँपालिका', 'दार्मा गाउँपालिका'],
+  'रुकुम पश्चिम': ['मुसिकोट नगरपालिका', 'चौरजहारी नगरपालिका', 'आठबिसकोट नगरपालिका', 'बाँफिकोट गाउँपालिका', 'सानोभेरी गाउँपालिका', 'त्रिवेणी गाउँपालिका'],
+  'जाजरकोट': ['भेरी नगरपालिका', 'छेडागाड नगरपालिका', 'नलगाड नगरपालिका', 'बरेकोट गाउँपालिका', 'कुसे गाउँपालिका', 'जुनीचाँदे गाउँपालिका', 'शिवालय गाउँपालिका'],
+  'हुम्ला': ['सिमकोट गाउँपालिका', 'नामखा गाउँपालिका', 'खार्पुनाथ गाउँपालिका', 'सर्केगाड गाउँपालिका', 'चङ्खेली गाउँपालिका', 'अदानचुली गाउँपालिका', 'ताँजाकोट गाउँपालिका'],
+  'मुगु': ['छायाँनाथ रारा नगरपालिका', 'मुगुम कार्मारोङ गाउँपालिका', 'सोरु गाउँपालिका', 'खत्याड गाउँपालिका'],
+  'डोल्पा': ['ठूलीभेरी नगरपालिका', 'त्रिपुरासुन्दरी नगरपालिका', 'डोल्पो बुद्ध गाउँपालिका', 'शे फोक्सुण्डो गाउँपालिका', 'जगदुल्ला गाउँपालिका', 'मुड्केचुला गाउँपालिका', 'काइके गाउँपालिका', 'छार्का ताङसोङ गाउँपालिका'],
+
+  // === सुदूरपश्चिम प्रदेश (SUDURPASHCHIM PROVINCE - 9 Districts) ===
+  'कैलाली': ['धनगढी उपमहानगरपालिका', 'टीकापुर नगरपालिका', 'घोडाघोडी नगरपालिका', 'लमकीचुहा नगरपालिका', 'गोदावरी नगरपालिका', 'भजनी नगरपालिका', 'गौरीगङ्गा नगरपालिका', 'जनकी गाउँपालिका', 'बर्दगोरिया गाउँपालिका', 'मोहन्याल गाउँपालिका', 'कैलारी गाउँपालिका', 'जोशीपुर गाउँपालिका', 'चूरे गाउँपालिका'],
+  'कञ्चनपुर': ['भीमदत्त नगरपालिका', 'पुनर्वास नगरपालिका', 'बेलौरी नगरपालिका', 'शुक्लाफाँटा नगरपालिका', 'बेदकोट नगरपालिका', 'कृष्णपुर नगरपालिका', 'महाकाली नगरपालिका', 'बेलडाँडी गाउँपालिका', 'लालझाडी गाउँपालिका'],
+  'डडेलधुरा': ['अमरगढी नगरपालिका', 'परशुराम नगरपालिका', 'आलताल गाउँपालिका', 'भागेश्वर गाउँपालिका', 'नवदुर्गा गाउँपालिका', 'अजयमेरु गाउँपालिका', 'गन्यापधुरा गाउँपालिका'],
+  'डोटी': ['दिपायल सिलगढी नगरपालिका', 'शिखर नगरपालिका', 'पूर्वीचौकी गाउँपालिका', 'बडीकेदार गाउँपालिका', 'जोरायल गाउँपालिका', 'सायल गाउँपालिका', 'आदर्श गाउँपालिका', 'केआईसिंह गाउँपालिका', 'बोगटान फुड्सिल गाउँपालिका'],
+  'बैतडी': ['दशरथचन्द नगरपालिका', 'पाटन नगरपालिका', 'मेलौली नगरपालिका', 'पुर्चौडी नगरपालिका', 'सुर्नया गाउँपालिका', 'सिगास गाउँपालिका', 'शिवनाथ गाउँपालिका', 'पञ्चेश्वर गाउँपालिका', 'दोगडाकेदार गाउँपालिका', 'डिलौध गाउँपालिका'],
+  'अछाम': ['मङ्गलसेन नगरपालिका', 'कमलबजार नगरपालिका', 'साँफेबगर नगरपालिका', 'पञ्चदेवल विनायक नगरपालिका', 'चौरपाटी गाउँपालिका', 'मेल्लेख गाउँपालिका', 'बन्नागढी जयगढ गाउँपालिका', 'रामरोशन गाउँपालिका', 'ढकारी गाउँपालिका', 'तुर्माखाँद गाउँपालिका'],
+  'बझाङ': ['जयपृथ्वी नगरपालिका', 'बुङ्गल नगरपालिका', 'तलकोट गाउँपालिका', 'मष्टा गाउँपालिका', 'खप्तडछान्ना गाउँपालिका', 'थलारा गाउँपालिका', 'वित्थरचिर गाउँपालिका', 'सुरमा गाउँपालिका', 'छब्बीसप्याथी गाउँपालिका', 'साईपाल गाउँपालिका', 'केदारस्यूँ गाउँपालिका', 'दुर्गाथली गाउँपालिका'],
+  'दार्चुला': ['महाकाली नगरपालिका', 'शैल्यशिखर नगरपालिका', 'मालिकार्जुन गाउँपालिका', 'अपिहिमाल गाउँपालिका', 'नौगाड गाउँपालिका', 'मार्मा गाउँपालिका', 'लेकम गाउँपालिका', 'व्याँस गाउँपालिका', 'दुहुँ गाउँपालिका'],
+  'बाजुरा': ['मार्तडी बडीमालिका नगरपालिका', 'त्रिवेणी नगरपालिका', 'बुढीगंगा नगरपालिका', 'बुढीनन्दा नगरपालिका', 'गौमुल गाउँपालिका', 'हिमाली गाउँपालिका', 'स्वामीकार्तिक खापर गाउँपालिका', 'छेडेडह गाउँपालिका', 'जगन्नाथ गाउँपालिका']
+};
+
+// Generic Fallback Municipalities Generator for safety
+const DEFAULT_REAL_MUNICIPALITIES = [
+  'मुख्य नगरपालिका (वडा नं १-५)',
+  'नगरपालिका (वडा नं ६-१०)',
+  'गाउँपालिका (वडा नं १-४)',
+  'गाउँपालिका (वडा नं ५-९)'
+];
+
+// --- EXTENDED POLITICAL PARTIES DATA ---
+const PARTIES = [
+  { id: 'rsp', name: 'राष्ट्रिय स्वतन्त्र पार्टी (रास्वपा)', code: 'RSP', symbol: '🔔', color: 'bg-blue-600', text: 'text-blue-600' },
+  { id: 'nc', name: 'नेपाली कांग्रेस', code: 'NC', symbol: '🌳', color: 'bg-emerald-600', text: 'text-emerald-600' },
+  { id: 'uml', name: 'नेकपा (एमाले)', code: 'CPN-UML', symbol: '☀️', color: 'bg-rose-600', text: 'text-rose-600' },
+  { id: 'mc', name: 'नेकपा (माओवादी केन्द्र)', code: 'CPN-MC', symbol: '☭', color: 'bg-red-700', text: 'text-red-700' },
+  { id: 'rpp', name: 'राष्ट्रिय प्रजातन्त्र पार्टी (राप्रपा)', code: 'RPP', symbol: '🐮', color: 'bg-amber-500', text: 'text-amber-500' },
+  { id: 'jsp', name: 'जनता समाजवादी पार्टी (जसपा)', code: 'JSP', symbolChar: '☂️', color: 'bg-yellow-500', text: 'text-yellow-600' },
+  { id: 'cpn_s', name: 'नेकपा (एकीकृत समाजवादी)', code: 'CPN-S', symbolChar: '🖋️', color: 'bg-pink-600', text: 'text-pink-600' },
+  { id: 'janamat', name: 'जनमत पार्टी', code: 'JANAMAT', symbolChar: '📻', color: 'bg-indigo-600', text: 'text-indigo-600' },
+  { id: 'nagarik', name: 'नागरिक उन्मुक्ति पार्टी', code: 'NAGARIK', symbolChar: '🛺', color: 'bg-teal-600', text: 'text-teal-600' },
+  { id: 'ind', name: 'स्वतन्त्र / अन्य उमेदवारी', code: 'IND', symbol: '🙋‍♂️', color: 'bg-purple-600', text: 'text-purple-600' }
+];
+
+// --- INITIAL MOCK VOTES FOR REALISTIC LIVE STATS ---
+const INITIAL_VOTES = [
+  { id: 1, email: 'ram.shrestha@gmail.com', provinceId: 'p3', district: 'काठमाडौँ', localLevel: 'काठमाडौँ महानगरपालिका', partyId: 'rsp', timestamp: new Date(Date.now() - 3600000).toISOString() },
+  { id: 2, email: 'sita.karki@yahoo.com', provinceId: 'p3', district: 'काठमाडौँ', localLevel: 'बूढानिलकण्ठ नगरपालिका', partyId: 'nc', timestamp: new Date(Date.now() - 7200000).toISOString() },
+  { id: 3, email: 'hari.adhikari@outlook.com', provinceId: 'p1', district: 'झापा', localLevel: 'बिर्तामोड नगरपालिका', partyId: 'uml', timestamp: new Date(Date.now() - 10800000).toISOString() },
+  { id: 4, email: 'gita.gurung@gmail.com', provinceId: 'p4', district: 'कास्की', localLevel: 'पोखरा महानगरपालिका', partyId: 'rsp', timestamp: new Date(Date.now() - 14400000).toISOString() },
+  { id: 5, email: 'bijay.yadav@gmail.com', provinceId: 'p2', district: 'धनुषा', localLevel: 'जनकपुरधाम उपमहानगरपालिका', partyId: 'jsp', timestamp: new Date(Date.now() - 18000000).toISOString() },
+  { id: 6, email: 'bikash.thapa@gmail.com', provinceId: 'p5', district: 'रुपन्देही', localLevel: 'बुटवल उपमहानगरपालिका', partyId: 'nc', timestamp: new Date(Date.now() - 21600000).toISOString() },
+  { id: 7, email: 'sunita.dahala@gmail.com', provinceId: 'p3', district: 'चितवन', localLevel: 'भरतपुर महानगरपालिका', partyId: 'mc', timestamp: new Date(Date.now() - 25200000).toISOString() },
+  { id: 8, email: 'kiran.thapa@gmail.com', provinceId: 'p7', district: 'कैलाली', localLevel: 'धनगढी उपमहानगरपालिका', partyId: 'rsp', timestamp: new Date(Date.now() - 32400000).toISOString() }
+];
+
+export default function App() {
+  const [activeTab, setActiveTab] = useState('poll'); // 'poll' | 'results' | 'dev_guide'
+  
+  // Form Inputs
+  const [email, setEmail] = useState('');
+  const [selectedProvince, setSelectedProvince] = useState('');
+  const [availableDistricts, setAvailableDistricts] = useState([]);
+  const [selectedDistrict, setSelectedDistrict] = useState('');
+  const [availableLocalLevels, setAvailableLocalLevels] = useState([]);
+  const [selectedLocalLevel, setSelectedLocalLevel] = useState('');
+  const [selectedParty, setSelectedParty] = useState('');
+
+  // Statuses
+  const [formError, setFormError] = useState('');
+  const [voteSubmittedSuccess, setVoteSubmittedSuccess] = useState(false);
+
+  // Database State
+  const [votes, setVotes] = useState(() => {
+    const saved = localStorage.getItem('np_poll_votes_v2');
+    return saved ? JSON.parse(saved) : INITIAL_VOTES;
+  });
+
+  const [votedEmails, setVotedEmails] = useState(() => {
+    const saved = localStorage.getItem('np_poll_voted_emails_v2');
+    return saved ? JSON.parse(saved) : ['ram.shrestha@gmail.com', 'sita.karki@yahoo.com', 'hari.adhikari@outlook.com'];
+  });
+
+  // Dashboard Filters
+  const [resultProvinceFilter, setResultProvinceFilter] = useState('all');
+  const [resultDistrictFilter, setResultDistrictFilter] = useState('all');
+
+  useEffect(() => {
+    localStorage.setItem('np_poll_votes_v2', JSON.stringify(votes));
+  }, [votes]);
+
+  useEffect(() => {
+    localStorage.setItem('np_poll_voted_emails_v2', JSON.stringify(votedEmails));
+  }, [votedEmails]);
+
+  // Update Districts on Province Change
+  useEffect(() => {
+    if (selectedProvince) {
+      const districts = DISTRICTS_BY_PROVINCE[selectedProvince] || [];
+      setAvailableDistricts(districts);
+      setSelectedDistrict('');
+      setSelectedLocalLevel('');
+    } else {
+      setAvailableDistricts([]);
+      setSelectedDistrict('');
+      setSelectedLocalLevel('');
+    }
+  }, [selectedProvince]);
+
+  // Update Real Municipalities/Gaunpalikas on District Change
+  useEffect(() => {
+    if (selectedDistrict) {
+      const locals = REAL_LOCAL_LEVELS[selectedDistrict] || DEFAULT_REAL_MUNICIPALITIES;
+      setAvailableLocalLevels(locals);
+      setSelectedLocalLevel('');
+    } else {
+      setAvailableLocalLevels([]);
+      setSelectedLocalLevel('');
+    }
+  }, [selectedDistrict]);
+
+  // Direct Submit Handler (No OTP Required)
+  const handleSubmitVote = (e) => {
+    e.preventDefault();
+    setFormError('');
+
+    const cleanEmail = email.toLowerCase().trim();
+
+    if (!cleanEmail || !cleanEmail.includes('@') || !cleanEmail.includes('.')) {
+      setFormError('कृपया वैध इमेल ठेगाना प्रविष्ट गर्नुहोस्।');
+      return;
+    }
+
+    if (votedEmails.includes(cleanEmail)) {
+      setFormError('यो इमेलबाट पहिले नै मत हालिसकिएको छ। एक इमेलबाट एकपटक मात्र मत हाल्न पाइन्छ।');
+      return;
+    }
+
+    if (!selectedProvince || !selectedDistrict || !selectedLocalLevel || !selectedParty) {
+      setFormError('कृपया प्रदेश, जिल्ला, स्थानीय तह (पालिका) र राजनीतिक पार्टी अनिवार्य छनोट गर्नुहोस्।');
+      return;
+    }
+
+    // Register Vote
+    const newVote = {
+      id: Date.now(),
+      email: cleanEmail,
+      provinceId: selectedProvince,
+      district: selectedDistrict,
+      localLevel: selectedLocalLevel,
+      partyId: selectedParty,
+      timestamp: new Date().toISOString()
+    };
+
+    setVotes(prev => [newVote, ...prev]);
+    setVotedEmails(prev => [...prev, cleanEmail]);
+    setVoteSubmittedSuccess(true);
+  };
+
+  // Filter Logic for Results Dashboard
+  const getFilteredVotes = () => {
+    return votes.filter(v => {
+      if (resultProvinceFilter !== 'all' && v.provinceId !== resultProvinceFilter) return false;
+      if (resultDistrictFilter !== 'all' && v.district !== resultDistrictFilter) return false;
+      return true;
+    });
+  };
+
+  const filteredVotesList = getFilteredVotes();
+  const totalFilteredVotes = filteredVotesList.length;
+
+  const partyStats = PARTIES.map(party => {
+    const count = filteredVotesList.filter(v => v.partyId === party.id).length;
+    const percentage = totalFilteredVotes > 0 ? ((count / totalFilteredVotes) * 100).toFixed(1) : '0.0';
+    return {
+      ...party,
+      count,
+      percentage: parseFloat(percentage)
+    };
+  }).sort((a, b) => b.count - a.count);
+
+  return (
+    <div className="min-h-screen bg-pink-50/40 text-slate-800 font-sans flex flex-col antialiased">
+      
+      {/* Top Notice Banner */}
+      <div className="bg-gradient-to-r from-pink-600 to-rose-600 text-white text-xs md:text-sm py-2.5 px-4 text-center font-medium shadow-sm flex items-center justify-center gap-2">
+        <ShieldAlert className="w-4 h-4 shrink-0 text-pink-200" />
+        <span>
+          <strong>सूचना:</strong> यो एक स्वतन्त्र <strong>जनमत सर्वेक्षण (Public Opinion Poll)</strong> हो, आधिकारिक निर्वाचन होइन।
+        </span>
+      </div>
+
+      {/* Main App Navigation Header */}
+      <header className="bg-white/95 backdrop-blur-md sticky top-0 z-40 border-b border-pink-100 shadow-sm">
+        <div className="max-w-6xl mx-auto px-4 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-4">
+          
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-pink-500 to-rose-500 flex items-center justify-center text-white shadow-md shadow-pink-200">
+              <Vote className="w-6 h-6" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent leading-tight">
+                नेपाल जनमत सर्वेक्षण २०८१/८२
+              </h1>
+              <p className="text-xs text-slate-500 font-medium">Nepal Public Opinion Poll (Pink & White Edition)</p>
+            </div>
+          </div>
+
+          <nav className="flex items-center gap-1.5 bg-pink-50/80 p-1.5 rounded-xl border border-pink-100/80 w-full sm:w-auto justify-center">
+            <button
+              onClick={() => setActiveTab('poll')}
+              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${
+                activeTab === 'poll'
+                  ? 'bg-white text-pink-600 shadow-sm border border-pink-100'
+                  : 'text-slate-600 hover:text-pink-600 hover:bg-white/50'
+              }`}
+            >
+              <Vote className="w-4 h-4" />
+              <span>मतदान गर्नुहोस्</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('results')}
+              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${
+                activeTab === 'results'
+                  ? 'bg-white text-pink-600 shadow-sm border border-pink-100'
+                  : 'text-slate-600 hover:text-pink-600 hover:bg-white/50'
+              }`}
+            >
+              <BarChart3 className="w-4 h-4" />
+              <span>लाइभ नतिजा</span>
+              <span className="bg-pink-100 text-pink-700 text-xs px-2 py-0.5 rounded-full font-bold ml-1">
+                {votes.length}
+              </span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('dev_guide')}
+              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${
+                activeTab === 'dev_guide'
+                  ? 'bg-white text-pink-600 shadow-sm border border-pink-100'
+                  : 'text-slate-600 hover:text-pink-600 hover:bg-white/50'
+              }`}
+            >
+              <Code className="w-4 h-4" />
+              <span>स्रोत कोड र गाइड</span>
+            </button>
+          </nav>
+
+        </div>
+      </header>
+
+      {/* Main Content Area */}
+      <main className="flex-1 max-w-6xl w-full mx-auto p-4 md:p-6 lg:p-8">
+
+        {/* TAB 1: DIRECT VOTING FORM (NO OTP STEP) */}
+        {activeTab === 'poll' && (
+          <div className="space-y-6">
+            
+            {/* Banner Header */}
+            <div className="bg-gradient-to-r from-pink-500 via-rose-500 to-pink-600 rounded-2xl p-6 md:p-8 text-white shadow-xl shadow-pink-200/50 relative overflow-hidden">
+              <div className="absolute top-0 right-0 -mt-8 -mr-8 w-48 h-48 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+              <div className="relative z-10 max-w-2xl">
+                <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-semibold mb-3">
+                  <Sparkles className="w-3.5 h-3.5 text-yellow-300" />
+                  <span>सरल, सुरक्षित र पारदर्शी जनमत</span>
+                </div>
+                <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight mb-2">
+                  तपाईंको अमूल्य मत, समृद्ध नेपालको आधार!
+                </h2>
+                <p className="text-pink-100 text-sm md:text-base leading-relaxed">
+                  इमेल, प्रदेश, जिल्ला र सही नगरपालिका/गाउँपालिका छनोट गरी मनपर्ने पार्टी वा स्वतन्त्र उम्मेदवारलाई तुरुन्तै मत दिनुहोस्।
+                </p>
+              </div>
+            </div>
+
+            {/* Voting Form Container */}
+            {voteSubmittedSuccess ? (
+              <div className="bg-white border-2 border-emerald-400/30 rounded-2xl p-8 text-center shadow-lg max-w-2xl mx-auto space-y-4">
+                <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
+                  <CheckCircle2 className="w-10 h-10" />
+                </div>
+                <h3 className="text-2xl font-bold text-slate-800">तपाईंको मत सफलतापूर्वक दर्ता भयो!</h3>
+                <p className="text-slate-600 text-sm max-w-md mx-auto">
+                  नेपाल जनमत सर्वेक्षणमा सहभागी हुनुभएकोमा धन्यवाद। तपाईंको मत रियल-टाइम नतिजामा समावेश गरिएको छ।
+                </p>
+                <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
+                  <button
+                    onClick={() => setActiveTab('results')}
+                    className="w-full sm:w-auto bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-700 hover:to-rose-700 text-white font-semibold px-6 py-3 rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
+                  >
+                    <BarChart3 className="w-4 h-4" />
+                    <span>लाइभ मतपरिणाम हेर्नुहोस्</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setVoteSubmittedSuccess(false);
+                      setEmail('');
+                      setSelectedProvince('');
+                      setSelectedDistrict('');
+                      setSelectedLocalLevel('');
+                      setSelectedParty('');
+                    }}
+                    className="w-full sm:w-auto bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-6 py-3 rounded-xl transition-all"
+                  >
+                    नयाँ मत दर्ता परीक्षण गर्नुहोस्
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmitVote} className="bg-white border border-pink-100 rounded-2xl p-6 md:p-8 shadow-sm space-y-6">
+                
+                {formError && (
+                  <div className="bg-rose-50 border border-rose-200 text-rose-700 text-xs p-3.5 rounded-xl flex items-center gap-2">
+                    <ShieldAlert className="w-4 h-4 shrink-0" />
+                    <span>{formError}</span>
+                  </div>
+                )}
+
+                {/* Section 1: Email Address Input */}
+                <div className="space-y-2">
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    १. इमेल ठेगाना (Email Address) *
+                  </label>
+                  <div className="relative max-w-md">
+                    <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="yourname@example.com"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 pl-10 pr-3 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-pink-500/30 focus:border-pink-500 transition-all"
+                      required
+                    />
+                  </div>
+                  <p className="text-[11px] text-slate-500">
+                    * एक इमेलबाट एकपटक मात्र निष्पक्ष मत हाल्न पाउने व्यवस्था सुनिश्चित गर्न इमेल अनिवार्य छ।
+                  </p>
+                </div>
+
+                <hr className="border-pink-50" />
+
+                {/* Section 2: Administrative Hierarchy (Province -> District -> Real Municipality) */}
+                <div className="space-y-3">
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    २. प्रशासनिक क्षेत्र छनोट (प्रदेश, जिल्ला र वास्तविक पालिका) *
+                  </label>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    
+                    {/* Province Dropdown */}
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 mb-1">
+                        प्रदेश छान्नुहोस्
+                      </label>
+                      <select
+                        value={selectedProvince}
+                        onChange={(e) => setSelectedProvince(e.target.value)}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-pink-500/30 focus:border-pink-500 transition-all"
+                        required
+                      >
+                        <option value="">-- प्रदेश छान्नुहोस् --</option>
+                        {PROVINCES.map(p => (
+                          <option key={p.id} value={p.id}>{p.name}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* District Dropdown */}
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 mb-1">
+                        जिल्ला छान्नुहोस्
+                      </label>
+                      <select
+                        value={selectedDistrict}
+                        onChange={(e) => setSelectedDistrict(e.target.value)}
+                        disabled={!selectedProvince}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-pink-500/30 focus:border-pink-500 transition-all disabled:opacity-50"
+                        required
+                      >
+                        <option value="">-- जिल्ला छान्नुहोस् --</option>
+                        {availableDistricts.map(d => (
+                          <option key={d} value={d}>{d}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Real Municipality / Gaunpalika Dropdown */}
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 mb-1">
+                        नगरपालिका / गाउँपालिका छान्नुहोस्
+                      </label>
+                      <select
+                        value={selectedLocalLevel}
+                        onChange={(e) => setSelectedLocalLevel(e.target.value)}
+                        disabled={!selectedDistrict}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-pink-500/30 focus:border-pink-500 transition-all disabled:opacity-50"
+                        required
+                      >
+                        <option value="">-- वास्तविक पालिका छान्नुहोस् --</option>
+                        {availableLocalLevels.map(l => (
+                          <option key={l} value={l}>{l}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                  </div>
+                </div>
+
+                <hr className="border-pink-50" />
+
+                {/* Section 3: Political Party / Candidate Selection */}
+                <div className="space-y-3">
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    ३. राजनीतिक पार्टी / उम्मेदवार छनोट *
+                  </label>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    {PARTIES.map(party => {
+                      const isSelected = selectedParty === party.id;
+                      return (
+                        <div
+                          key={party.id}
+                          onClick={() => setSelectedParty(party.id)}
+                          className={`cursor-pointer p-3.5 rounded-xl border transition-all flex items-center justify-between ${
+                            isSelected
+                              ? 'border-pink-500 bg-pink-50/70 shadow-sm ring-1 ring-pink-500'
+                              : 'border-slate-200 bg-white hover:border-pink-300 hover:bg-pink-50/30'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={`w-9 h-9 rounded-lg ${party.color} text-white flex items-center justify-center font-bold text-base shadow-sm`}>
+                              {party.symbolChar || party.symbol}
+                            </div>
+                            <div>
+                              <div className="text-xs font-bold text-slate-800">{party.name}</div>
+                              <div className="text-[10px] text-slate-500 font-mono">{party.code}</div>
+                            </div>
+                          </div>
+                          <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${
+                            isSelected ? 'border-pink-600 bg-pink-600 text-white' : 'border-slate-300'
+                          }`}>
+                            {isSelected && <span className="text-xs font-bold">✓</span>}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Final Direct Submit Button */}
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    className="w-full bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-700 hover:to-rose-700 text-white font-bold py-3.5 rounded-xl shadow-md shadow-pink-200 transition-all text-sm flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Vote className="w-5 h-5" />
+                    <span>आफ्नो मत सुरक्षित रूपमा पेश गर्नुहोस् (Submit Vote)</span>
+                  </button>
+                </div>
+
+              </form>
+            )}
+          </div>
+        )}
+
+        {/* TAB 2: LIVE RESULTS DASHBOARD */}
+        {activeTab === 'results' && (
+          <div className="space-y-6">
+            
+            {/* Header Banner */}
+            <div className="bg-white border border-pink-100 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div>
+                <div className="inline-flex items-center gap-1.5 text-pink-600 text-xs font-bold bg-pink-50 px-2.5 py-1 rounded-full mb-1">
+                  <span className="w-2 h-2 rounded-full bg-pink-600 animate-pulse"></span>
+                  प्रत्यक्ष नतिजा (Live Results)
+                </div>
+                <h2 className="text-xl font-bold text-slate-800">जनमत मतपरिणाम ड्यासबोर्ड</h2>
+                <p className="text-xs text-slate-500">समग्र राष्ट्रिय, प्रदेश तथा जिल्ला अनुसारको मत स्थिति</p>
+              </div>
+
+              <div className="bg-gradient-to-br from-pink-50 to-rose-50 border border-pink-100 p-4 rounded-xl flex items-center gap-4 w-full md:w-auto">
+                <div className="w-12 h-12 rounded-xl bg-pink-600 text-white flex items-center justify-center shadow-md shadow-pink-200">
+                  <Users className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="text-xs text-slate-500 font-medium">कुल सङ्कलित मत</div>
+                  <div className="text-2xl font-black text-pink-600 font-mono">
+                    {totalFilteredVotes} <span className="text-xs font-normal text-slate-500">मत</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Region Filters */}
+            <div className="bg-white border border-pink-100 p-4 rounded-xl shadow-sm grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-pink-600" />
+                  <span>प्रदेश अनुसार फिल्टर</span>
+                </label>
+                <select
+                  value={resultProvinceFilter}
+                  onChange={(e) => {
+                    setResultProvinceFilter(e.target.value);
+                    setResultDistrictFilter('all');
+                  }}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-pink-500/30"
+                >
+                  <option value="all">सबै प्रदेशहरू (National Level)</option>
+                  {PROVINCES.map(p => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center gap-1.5">
+                  <Building2 className="w-3.5 h-3.5 text-pink-600" />
+                  <span>जिल्ला अनुसार फिल्टर</span>
+                </label>
+                <select
+                  value={resultDistrictFilter}
+                  onChange={(e) => setResultDistrictFilter(e.target.value)}
+                  disabled={resultProvinceFilter === 'all'}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-pink-500/30 disabled:opacity-50"
+                >
+                  <option value="all">सबै जिल्लाहरू</option>
+                  {resultProvinceFilter !== 'all' && (DISTRICTS_BY_PROVINCE[resultProvinceFilter] || []).map(d => (
+                    <option key={d} value={d}>{d}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Results Percentage Bars */}
+            <div className="bg-white border border-pink-100 rounded-2xl p-6 shadow-sm space-y-5">
+              <h3 className="font-bold text-slate-800 text-sm flex items-center gap-2 border-b border-slate-100 pb-3">
+                <PieIcon className="w-4 h-4 text-pink-600" />
+                <span>पार्टी अनुसार प्राप्त मत र प्रतिशत (Party Percentage Breakdown)</span>
+              </h3>
+
+              {totalFilteredVotes === 0 ? (
+                <div className="text-center py-12 text-slate-400">
+                  <Info className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-xs">छनोट गरिएको क्षेत्रमा अहिलेसम्म कुनै मत दर्ता भएको छैन।</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {partyStats.map((party, index) => (
+                    <div key={party.id} className="space-y-1.5 bg-pink-50/20 p-3 rounded-xl border border-pink-50">
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2 font-bold text-slate-800">
+                          <span className="w-5 h-5 rounded-md bg-slate-100 text-slate-600 flex items-center justify-center text-[10px]">
+                            #{index + 1}
+                          </span>
+                          <span>{party.symbolChar || party.symbol}</span>
+                          <span>{party.name}</span>
+                        </div>
+                        <div className="flex items-center gap-3 font-mono">
+                          <span className="text-slate-500">{party.count} मत</span>
+                          <span className="font-bold text-pink-600 text-sm">{party.percentage}%</span>
+                        </div>
+                      </div>
+
+                      <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden flex">
+                        <div
+                          className={`h-full ${party.color} transition-all duration-700 ease-out rounded-full`}
+                          style={{ width: `${party.percentage}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Audit Log Table */}
+            <div className="bg-white border border-pink-100 rounded-2xl p-6 shadow-sm space-y-4">
+              <h3 className="font-bold text-slate-800 text-sm flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-emerald-600" />
+                <span>हालै दर्ता भएका मतहरूको सूची (Audit Log)</span>
+              </h3>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-100">
+                    <tr>
+                      <th className="p-3">समय</th>
+                      <th className="p-3">प्रदेश</th>
+                      <th className="p-3">जिल्ला</th>
+                      <th className="p-3">वास्तविक पालिका</th>
+                      <th className="p-3">छानेको पार्टी</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {votes.slice(0, 10).map((v) => {
+                      const partyObj = PARTIES.find(p => p.id === v.partyId);
+                      const provObj = PROVINCES.find(p => p.id === v.provinceId);
+                      return (
+                        <tr key={v.id} className="hover:bg-pink-50/30 transition-colors">
+                          <td className="p-3 text-slate-500 font-mono">
+                            {new Date(v.timestamp).toLocaleTimeString('ne-NP', { hour: '2-digit', minute: '2-digit' })}
+                          </td>
+                          <td className="p-3 font-medium text-slate-700">{provObj ? provObj.name.split(' ')[0] : v.provinceId}</td>
+                          <td className="p-3 font-medium text-slate-700">{v.district}</td>
+                          <td className="p-3 text-slate-600 font-semibold">{v.localLevel}</td>
+                          <td className="p-3">
+                            <span className={`inline-flex items-center gap-1 font-bold ${partyObj?.text || 'text-slate-800'}`}>
+                              <span>{partyObj?.symbolChar || partyObj?.symbol}</span>
+                              <span>{partyObj?.name}</span>
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+        )}
+
+        {/* TAB 3: DEVELOPER & DEPLOYMENT GUIDE */}
+        {activeTab === 'dev_guide' && (
+          <div className="space-y-6">
+            
+            <div className="bg-white border border-pink-100 rounded-2xl p-6 shadow-sm">
+              <div className="inline-flex items-center gap-1.5 text-pink-600 text-xs font-bold bg-pink-50 px-2.5 py-1 rounded-full mb-2">
+                <Code className="w-3.5 h-3.5" />
+                <span>Production Deployment Instructions</span>
+              </div>
+              <h2 className="text-xl font-bold text-slate-800">वेबसाइट पब्लिश र Supabase सेटअप निर्देशिका</h2>
+              <p className="text-xs text-slate-500 mt-1">
+                यस एप्लिकेसनलाई Supabase Database, Vercel Hosting र Google Search Console मा पब्लिश गर्ने तरिका।
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              
+              <div className="bg-white border border-pink-100 rounded-2xl p-6 shadow-sm space-y-3">
+                <div className="flex items-center gap-2.5 border-b border-slate-100 pb-2">
+                  <Server className="w-5 h-5 text-pink-600" />
+                  <h3 className="font-bold text-slate-800 text-sm">१. Supabase Database Table Schema</h3>
+                </div>
+                <div className="bg-slate-900 text-pink-300 p-3.5 rounded-xl text-xs font-mono overflow-x-auto border border-slate-800">
+                  <pre>{`-- Votes Table Schema (Without OTP)
+create table votes (
+  id uuid default gen_random_uuid() primary key,
+  email text unique not null,
+  province_id text not null,
+  district text not null,
+  local_level text not null,
+  party_id text not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Row Level Security (RLS)
+alter table votes enable row level security;
+
+create policy "Allow vote insert" on votes
+  for insert with check (true);
+
+create policy "Allow public view" on votes
+  for select using (true);`}</pre>
+                </div>
+              </div>
+
+              <div className="bg-white border border-pink-100 rounded-2xl p-6 shadow-sm space-y-3">
+                <div className="flex items-center gap-2.5 border-b border-slate-100 pb-2">
+                  <Globe className="w-5 h-5 text-pink-600" />
+                  <h3 className="font-bold text-slate-800 text-sm">२. Vercel मा निःशुल्क Hosting</h3>
+                </div>
+                <ol className="text-xs text-slate-600 space-y-2 list-decimal pl-4">
+                  <li>यो React स्रोत कोड GitHub मा अपलोड (Push) गर्नुहोस्।</li>
+                  <li><a href="https://vercel.com" target="_blank" rel="noreferrer" className="text-pink-600 font-semibold underline">Vercel.com</a> मा लगइन गरी Repository छान्नुहोस्।</li>
+                  <li>Environment Variables मा Supabase Credentials थप्नुहोस्।</li>
+                  <li><strong>Deploy</strong> मा क्लिक गर्नुहोस्, वेबसाइट केही सेकेन्डमै पब्लिश हुनेछ।</li>
+                </ol>
+              </div>
+
+            </div>
+
+          </div>
+        )}
+
+      </main>
+
+      {/* Footer */}
+      <footer className="bg-white border-t border-pink-100 mt-12 py-6 text-center text-xs text-slate-500">
+        <div className="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-lg bg-pink-600 text-white flex items-center justify-center font-bold text-xs">
+              ने
+            </div>
+            <span className="font-semibold text-slate-700">नेपाल जनमत सर्वेक्षण</span>
+          </div>
+          <p>© २०८१ सर्वअधिकार सुरक्षित। यो एक स्वतन्त्र जनमत मापन सर्वेक्षण हो।</p>
+        </div>
+      </footer>
+
+    </div>
+  );
+}
